@@ -271,6 +271,7 @@ async function poll(){
       if(grew||!plan){if(playing&&plan){pending=d}else{applyData(d)}}renderArtists()}
   }
   if(j.done){building=null;setBuild(j);if(j.error&&shop&&shop.id===slug&&!plan){$("#eMsg").textContent="Couldn't pull enough records for this crowd. Back to the last wall.";const i=SHOPS.findIndex(s=>s.id===slug);if(i>=0)SHOPS.splice(i,1);setTimeout(()=>{if(shop.id===slug&&buildPrev)pick(buildPrev,false)},2600)}if(!pending)setTimeout(()=>{if(!building&&!pending)$("#build").classList.remove("show")},4000);return}
+  if(shop&&shop.id===slug&&!plan)$("#eMsg").textContent=j.stage==="queue"?j.msg:"The wall is going up. First records land in a minute or two.";
   setBuild(j);setTimeout(poll,2500);
 }
 function applyData(d){const before=new Set((shop.tracks||[]).map(t=>t.id));shop=d;pending=null;plan=makePlan();layout();showEmpty();setBuild(null);

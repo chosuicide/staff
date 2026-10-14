@@ -15,6 +15,8 @@ N_TRACKS=8; N_ARTISTS=16
 # scratch dir for downloaded full tracks: must be writable by the server user
 FULL=os.environ.get("FULL_DIR") or ("/data/full" if os.access("/data",os.W_OK) else os.path.join(os.path.dirname(os.path.abspath(__file__)),"full"))
 JOBS={}; LOCK=threading.Lock()
+# one wall at a time: BeatScope peaks ~2 GB, so parallel builds just thrash a small box
+BUILD=threading.Semaphore(1); LINE=[]
 
 def qloo(path,**q):
     r=urllib.request.Request(QLOO+path+"?"+urllib.parse.urlencode(q),headers={"X-Api-Key":KEY})
@@ -65,10 +67,17 @@ class Job:
         tmp=f"{WEB}/data/{s.slug}.json.tmp"; json.dump(d,open(tmp,"w"),ensure_ascii=False); os.replace(tmp,f"{WEB}/data/{s.slug}.json")
 
     def run(s):
+        with LOCK: LINE.append(s)
+        while not BUILD.acquire(timeout=2):
+            with LOCK: ahead=LINE.index(s)+1
+            s.stage="queue"; s.msg=f"In line. {ahead} wall{'s' if ahead!=1 else ''} going up before this one."
+        with LOCK: LINE.remove(s)
+        s.say("qloo","Asking Qloo who walks in")
         try: s._run()
         except Exception as e:
             traceback.print_exc(); s.error=str(e)[:200]; s.say("error","Something broke: "+s.error)
         s.done=True
+        BUILD.release()
         try: s.write()
         except Exception: pass
     def _run(s):
