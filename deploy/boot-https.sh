@@ -19,6 +19,10 @@ $H {
 CF
 docker rm -f staff caddy cf
 docker run -d --restart unless-stopped --name staff -p 127.0.0.1:8080:7860 -v /opt/staffdata:/data -e QLOO_KEY_FILE=/data/qloo_key staff
+# hot-patch the image with the latest code from the public repo (image keeps the demo data)
+R=https://raw.githubusercontent.com/chosuicide/staff/main
+mkdir -p /opt/hot/web && for f in server.py web/app.js web/feat.js web/fx.js web/motion.js web/motion2.js web/style.css web/index.html; do curl -fsSL "$R/$f" -o "/opt/hot/$f.new" && mv "/opt/hot/$f.new" "/opt/hot/$f" && docker cp "/opt/hot/$f" "staff:/app/$f"; done
+docker restart staff
 docker run -d --restart unless-stopped --name caddy --network host -v caddy_data:/data -v /opt/caddy/Caddyfile:/etc/caddy/Caddyfile:ro -v /opt/pub:/opt/pub:ro caddy:2
 docker run -d --restart unless-stopped --name cf --network host cloudflare/cloudflared:latest tunnel --no-autoupdate --url http://localhost:8080
 while true; do

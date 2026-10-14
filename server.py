@@ -12,6 +12,8 @@ if KEYFILE and os.path.exists(KEYFILE): KEY=open(KEYFILE).read().strip() or KEY
 import shutil
 BS=os.environ.get("BEATSCOPE_BIN") or shutil.which("beatscope") or "/workspace/work/bs/venv/bin/beatscope"; BS_DIR=os.environ.get("BEATSCOPE_DIR",ROOT)
 N_TRACKS=8; N_ARTISTS=16
+# scratch dir for downloaded full tracks: must be writable by the server user
+FULL=os.environ.get("FULL_DIR") or ("/data/full" if os.access("/data",os.W_OK) else os.path.join(os.path.dirname(os.path.abspath(__file__)),"full"))
 JOBS={}; LOCK=threading.Lock()
 
 def qloo(path,**q):
@@ -71,7 +73,7 @@ class Job:
         except Exception: pass
     def _run(s):
         import yt_dlp
-        p=s.place; os.makedirs(f"{WEB}/art",exist_ok=True); os.makedirs(f"full/{s.slug}",exist_ok=True); os.makedirs(f"{WEB}/audio/{s.slug}",exist_ok=True)
+        p=s.place; os.makedirs(f"{WEB}/art",exist_ok=True); os.makedirs(f"{FULL}/{s.slug}",exist_ok=True); os.makedirs(f"{WEB}/audio/{s.slug}",exist_ok=True)
         p["image_local"]=save_img(p.get("image"),f"{WEB}/art/place_{s.slug}.jpg")
         try:
             r0=[r for r in qloo("/search",query=p["name"],types="urn:entity:place",take=5).get("results",[]) if r["entity_id"]==p["id"]]
@@ -91,7 +93,7 @@ class Job:
         q=queue.Queue(); stop=threading.Event()
         def fetcher():
             ydl=yt_dlp.YoutubeDL({"quiet":True,"skip_download":True,"noprogress":True,"ignoreerrors":True,"no_warnings":True})
-            dl=yt_dlp.YoutubeDL({"quiet":True,"noprogress":True,"format":"bestaudio","outtmpl":f"full/{s.slug}/%(id)s.%(ext)s",
+            dl=yt_dlp.YoutubeDL({"quiet":True,"noprogress":True,"format":"bestaudio","outtmpl":f"{FULL}/{s.slug}/%(id)s.%(ext)s",
                 "postprocessors":[{"key":"FFmpegExtractAudio","preferredcodec":"mp3"}]})
             for i,a in enumerate(s.artists):
                 if stop.is_set(): break
@@ -108,7 +110,7 @@ class Job:
                         got=e; break
                     if got: break
                 if not got: a["status"]="not found"; continue
-                fn=f"full/{s.slug}/{got['id']}.mp3"
+                fn=f"{FULL}/{s.slug}/{got['id']}.mp3"
                 if not os.path.exists(fn):
                     try: dl.download([got["webpage_url"]])
                     except Exception as x: print("dl fail",x); a["status"]="not found"; time.sleep(4); continue

@@ -5,6 +5,7 @@ WORKDIR /app
 COPY beatscope-0.15.0-py3-none-any.whl /tmp/
 RUN pip install --no-cache-dir /tmp/beatscope-0.15.0-py3-none-any.whl yt-dlp huggingface_hub numpy librosa
 COPY --chown=user . /app
+RUN mkdir -p /app/full && chown -R user /app
 USER user
 ENV PORT=7860 PYTHONUNBUFFERED=1
 EXPOSE 7860

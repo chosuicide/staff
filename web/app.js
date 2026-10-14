@@ -254,12 +254,12 @@ async function startBuild(p){
   openSheet(null);const qs=new URLSearchParams({id:p.id,name:p.name,address:p.address||"",image:p.image||"",tags:(p.tags||[]).join("|")});
   const j=await (await fetch("api/build?"+qs)).json();
   if(!SHOPS.find(s=>s.id===j.slug))SHOPS.push({id:j.slug,name:p.name});avail[j.slug]=true;
-  stop();pos=0;shop={id:j.slug,name:p.name,tracks:[],artists:[]};plan=null;excluded=new Set();
+  buildPrev=shop&&shop.id!==j.slug?shop.id:buildPrev;stop();pos=0;shop={id:j.slug,name:p.name,tracks:[],artists:[]};plan=null;excluded=new Set();
   building=j.done?null:j.slug;renderShops();layout();
   if(j.done){pick(j.slug,true);return}
   showEmpty();setBuild(j);poll();
 }
-let seenN=0;
+let seenN=0,buildPrev=null;
 function setBuild(j){const b=$("#build");b.classList.toggle("show",!!building||!!pending);b.classList.toggle("idle",!building);
   $("#bMsg").textContent=j?j.msg:"";$("#bN").textContent=j&&j.ready>=0?`${j.ready}/${j.target}`:"";b.classList.toggle("has",!!pending)}
 async function poll(){
@@ -270,7 +270,7 @@ async function poll(){
     if(d){const grew=d.tracks.length!==shop.tracks.length;shop.artists=d.artists;shop.name=d.name;
       if(grew||!plan){if(playing&&plan){pending=d}else{applyData(d)}}renderArtists()}
   }
-  if(j.done){building=null;setBuild(j);if(!pending)setTimeout(()=>{if(!building&&!pending)$("#build").classList.remove("show")},4000);return}
+  if(j.done){building=null;setBuild(j);if(j.error&&shop&&shop.id===slug&&!plan){$("#eMsg").textContent="Couldn't pull enough records for this crowd. Back to the last wall.";const i=SHOPS.findIndex(s=>s.id===slug);if(i>=0)SHOPS.splice(i,1);setTimeout(()=>{if(shop.id===slug&&buildPrev)pick(buildPrev,false)},2600)}if(!pending)setTimeout(()=>{if(!building&&!pending)$("#build").classList.remove("show")},4000);return}
   setBuild(j);setTimeout(poll,2500);
 }
 function applyData(d){const before=new Set((shop.tracks||[]).map(t=>t.id));shop=d;pending=null;plan=makePlan();layout();showEmpty();setBuild(null);
