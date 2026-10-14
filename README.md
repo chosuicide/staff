@@ -2,7 +2,7 @@
 
 **Qloo picks who. BeatScope picks when.**
 
-**Live demo:** http://54.199.232.160/
+**Live demo:** https://54-250-96-53.sslip.io/
 
 STAFF turns any café, bar or shop into a full-day, beat-matched soundtrack built from the taste of *that specific room's* crowd.
 
