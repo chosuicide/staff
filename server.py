@@ -214,6 +214,24 @@ class H(SimpleHTTPRequestHandler):
             traceback.print_exc(); return s.jsend({"error":str(e)[:200]},500)
         return super().do_GET()
 
+def persist_walls():
+    """Keep walls built on the server across restarts: web/data|audio|art live on the /data volume."""
+    base=os.environ.get("PERSIST_DIR") or "/data/web"
+    if not (os.path.isdir(os.path.dirname(base)) and os.access(os.path.dirname(base),os.W_OK)): return
+    for sub in ("data","audio","art"):
+        src=os.path.join(WEB,sub); dst=os.path.join(base,sub); os.makedirs(dst,exist_ok=True)
+        if os.path.islink(src): continue
+        if os.path.isdir(src):
+            for r,_,fs in os.walk(src):
+                for f in fs:
+                    a=os.path.join(r,f); b=os.path.join(dst,os.path.relpath(a,src))
+                    if not os.path.exists(b): os.makedirs(os.path.dirname(b),exist_ok=True); shutil.copy2(a,b)
+            shutil.rmtree(src)
+        os.symlink(dst,src)
+    open(os.path.join(base,".persisted"),"w").write("1"); print("walls persisted in",base,flush=True)
+
 if __name__=="__main__":
+    try: persist_walls()
+    except Exception: traceback.print_exc()
     port=int(sys.argv[1]) if len(sys.argv)>1 else int(os.environ.get("PORT","8765"))
     print("STAFF on",port,flush=True); ThreadingHTTPServer(("0.0.0.0",port),H).serve_forever()

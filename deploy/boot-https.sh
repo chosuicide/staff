@@ -17,11 +17,13 @@ $H {
   }
 }
 CF
+# rescue walls built inside the old container before replacing it
+mkdir -p /opt/staffdata/web && [ ! -f /opt/staffdata/web/.persisted ] && for d in data audio art; do docker cp staff:/app/web/$d /opt/staffdata/web/ 2>/dev/null; done; chown -R 1000 /opt/staffdata/web
 docker rm -f staff caddy cf
 docker run -d --restart unless-stopped --name staff -p 127.0.0.1:8080:7860 -v /opt/staffdata:/data -e QLOO_KEY_FILE=/data/qloo_key staff
 # hot-patch the image with the latest code from the public repo (image keeps the demo data)
 R=https://raw.githubusercontent.com/chosuicide/staff/main
-mkdir -p /opt/hot/web && for f in server.py web/app.js web/feat.js web/fx.js web/motion.js web/motion2.js web/style.css web/index.html; do curl -fsSL "$R/$f" -o "/opt/hot/$f.new" && mv "/opt/hot/$f.new" "/opt/hot/$f" && docker cp "/opt/hot/$f" "staff:/app/$f"; done
+rm -rf /opt/hot && mkdir -p /opt/hot && if curl -fsSL https://codeload.github.com/chosuicide/staff/tar.gz/main | tar xz -C /opt/hot --strip-components=1; then docker cp /opt/hot/server.py staff:/app/server.py; docker cp /opt/hot/web/. staff:/app/web/; docker exec -u 0 staff chown -R 1000 /app/web; fi
 docker restart staff
 docker run -d --restart unless-stopped --name caddy --network host -v caddy_data:/data -v /opt/caddy/Caddyfile:/etc/caddy/Caddyfile:ro -v /opt/pub:/opt/pub:ro caddy:2
 docker run -d --restart unless-stopped --name cf --network host cloudflare/cloudflared:latest tunnel --no-autoupdate --url http://localhost:8080
