@@ -223,7 +223,11 @@ addEventListener("keydown",e=>{if(e.code==="Space"&&$("#gate").classList.contain
 /* shops / crate / dials */
 const short=n=>n.replace(/^Fuglen\s+/,"").replace(/\s*[-–].*$/,"").slice(0,22);
 function renderShops(){$("#shops").innerHTML=SHOPS.map(s=>`<button data-id="${s.id}" class="${shop&&shop.id===s.id?"on":""}" ${avail[s.id]?"":"disabled"}>${esc(short(s.name))}</button>`).join("");
-  $$("#shops button").forEach(b=>b.onclick=()=>{if(b.dataset.id!==shop.id)pick(b.dataset.id,playing)})}
+  $$("#shops button").forEach(b=>b.onclick=()=>{if(b.dataset.id!==shop.id)pick(b.dataset.id,playing)});shopsFit()}
+function shopsFit(){const n=$("#shops");if(!n.dataset.w){n.dataset.w=1;n.addEventListener("scroll",shopsEdge,{passive:true});
+    n.addEventListener("wheel",e=>{if(n.scrollWidth>n.clientWidth&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){n.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});addEventListener("resize",shopsEdge)}
+  const on=n.querySelector("button.on");if(on){const t=on.offsetLeft-(n.clientWidth-on.offsetWidth)/2;n.style.scrollBehavior="auto";n.scrollLeft=Math.max(0,t);n.style.scrollBehavior=""}shopsEdge()}
+function shopsEdge(){const n=$("#shops"),m=n.scrollWidth-n.clientWidth;n.classList.toggle("fl",n.scrollLeft>2);n.classList.toggle("fr",m-n.scrollLeft>2)}
 function artistsOf(s){const m=new Map();for(const t of s.tracks){const a=m.get(t.artist);if(!a||t.affinity>a.affinity)m.set(t.artist,{name:t.artist,affinity:t.affinity,photo:t.photo||a?.photo,alias:new Set(a?a.alias:[])});m.get(t.artist).alias.add(t.qloo_name)}return [...m.values()].sort((a,b)=>b.affinity-a.affinity)}
 function renderArtists(){
   const list=shop.artists?shop.artists.map(a=>({name:a.name,affinity:a.affinity,photo:a.photo,alias:new Set(a.aliases||[]),status:a.status})):artistsOf(shop);
