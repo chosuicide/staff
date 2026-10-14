@@ -2,6 +2,8 @@
 
 **Qloo picks who. BeatScope picks when.**
 
+**Live demo:** http://54.199.232.160/
+
 STAFF turns any café, bar or shop into a full-day, beat-matched soundtrack built from the taste of *that specific room's* crowd.
 
 1. **Qloo decides WHAT.** Search a place; STAFF asks the Qloo Insights API which artists the people who go there love (`signal.interests.entities=<place>`), with affinity scores, artist tags and the place's own tags and opening hours. Two branches of the same chain get completely different crowds — Fuglen Tomigaya and Fuglen Asakusa share **0** artists.
