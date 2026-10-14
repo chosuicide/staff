@@ -1,0 +1,7 @@
+web/data/
+web/audio/
+web/art/
+full/
+__pycache__/
+*.json
+!package.json

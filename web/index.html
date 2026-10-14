@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16120e">
+<title>STAFF — the shop's day, on the wall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=Noto+Sans+JP:wght@300;700;900&family=Noto+Sans+KR:wght@300;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="gate">
+  <div class="g-disc" id="gDisc"><i></i><b id="gPct">0</b></div>
+  <p class="g-line">Pulling today's records</p>
+  <div class="g-btn" id="gBtn"><button id="enterSound">Drop the needle</button><button id="enterMute">Look first, no sound</button></div>
+</div>
+
+<header class="top">
+  <div class="logo">STAFF<span>/ record wall</span></div>
+  <nav id="shops" class="shops"></nav>
+  <div class="top-r"><button id="anyBtn" class="any">+ Any shop</button><button id="crateBtn">Crate</button><button id="curveBtn">Curve</button><button id="posterBtn">Poster</button></div>
+</header>
+
+<div id="room" class="room"><div class="r-img" id="rImg"></div><div id="tint" class="tint"></div><div id="win" class="win"></div><div class="r-name" id="rName"></div><div id="neon" class="neon"></div></div>
+<div id="lamp" class="lamp"></div>
+<canvas id="dust" class="dust"></canvas>
+<div id="dayChip" class="day-chip"></div>
+<main id="wall">
+  <div id="world">
+    <div id="glow" class="glow" style="left:0;top:0"></div>
+    <svg id="string"></svg>
+    <div id="cols"></div>
+    <div id="tags" class="tags"></div>
+    <canvas id="band" class="band"></canvas>
+    <div id="ruler"></div>
+    <div id="hours" class="hours"></div>
+    <div id="ph"><i></i></div>
+  </div>
+</main>
+
+<button id="toNow" class="to-now">● Back to the needle</button>
+<div id="build" class="build"><i class="spin"></i><span id="bMsg"></span><b id="bN"></b><button id="bHang" class="b-hang">Hang new records</button></div>
+<div id="empty" class="empty"><h2 id="eTitle"></h2><p id="eMsg"></p></div>
+
+<div id="split" class="split"></div>
+<div id="back" class="back"></div>
+<div id="poster" class="poster"></div>
+<footer class="deck">
+  <button id="playBtn" class="pbtn" aria-label="play"><svg viewBox="0 0 40 40"><path id="pIcon" d="M15 11 L30 20 L15 29 Z"/></svg></button>
+  <div class="d-now"><b id="npArtist">—</b><span id="npTitle"></span></div>
+  <div class="d-meta">
+    <span id="bpmNo" class="big">000.0</span><span class="u">BPM</span>
+    <span class="beats" id="dots"><i></i><i></i><i></i><i></i></span>
+    <span id="barNo" class="u">bar 000</span>
+    <span id="clock" class="u clock">0:00 / 0:00</span>
+  </div>
+  <button id="sndBtn" class="snd">Sound on</button>
+</footer>
+
+<aside id="any" class="sheet">
+  <div class="sh-h"><h3>Any shop</h3><p>Type a café, bar or shop. Qloo knows who walks in; we'll pull their records and hang the wall live.</p><button class="x" data-close>Close</button></div>
+  <input id="q" class="q" placeholder="e.g. Blue Bottle Kiyosumi" autocomplete="off">
+  <ol id="places" class="places"></ol>
+</aside>
+
+<aside id="crate" class="sheet">
+  <div class="sh-h"><h3>The crate</h3><p>Artists Qloo says this shop's crowd already loves. Tap to pull one out.</p><button class="x" data-close>Close</button></div>
+  <ol id="artists"></ol>
+</aside>
+
+<aside id="curve" class="sheet">
+  <div class="sh-h"><h3>The day's shape</h3><p>Turn a knob: how loud the room should feel at each part of the day.</p><button class="x" data-close>Close</button></div>
+  <div id="dials" class="dials"></div>
+  <svg id="curveSvg" class="curve-svg" viewBox="0 0 400 80" preserveAspectRatio="none"></svg>
+  <button id="writeBtn" class="write">Re-hang the wall</button>
+</aside>
+
+<script src="app.js"></script>
+<script src="fx.js"></script>
+<script src="feat.js"></script>
+<script src="motion.js"></script>
+<script src="motion2.js"></script>
+</body>
+</html>
