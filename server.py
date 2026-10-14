@@ -7,6 +7,8 @@ from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 import numpy as np
 ROOT=os.path.dirname(os.path.abspath(__file__)); WEB=os.path.join(ROOT,"web"); os.chdir(ROOT)
 QLOO="https://hackathon.api.qloo.com"; KEY=os.environ.get("QLOO_API_KEY","")
+KEYFILE=os.environ.get("QLOO_KEY_FILE",""); SETKEY=os.environ.get("SETKEY_TOKEN","")
+if KEYFILE and os.path.exists(KEYFILE): KEY=open(KEYFILE).read().strip() or KEY
 import shutil
 BS=os.environ.get("BEATSCOPE_BIN") or shutil.which("beatscope") or "/workspace/work/bs/venv/bin/beatscope"; BS_DIR=os.environ.get("BEATSCOPE_DIR",ROOT)
 N_TRACKS=8; N_ARTISTS=16
@@ -141,6 +143,7 @@ class Job:
 
 def slug_of(pid): return "p_"+re.sub(r"[^a-z0-9]","",pid.lower())[:10]
 
+FORM='<!doctype html><meta name=viewport content="width=device-width"><body style="font:18px sans-serif;padding:24px;background:#16120e;color:#eee"><form method=post><p>Qloo API key</p><input name=k type=password style="width:100%;font-size:18px;padding:8px"><p><button style="font-size:18px;padding:8px 20px">Save</button></form>'
 class H(SimpleHTTPRequestHandler):
     def __init__(s,*a,**k): super().__init__(*a,directory=WEB,**k)
     def log_message(s,*a): pass
@@ -149,8 +152,21 @@ class H(SimpleHTTPRequestHandler):
     def end_headers(s):
         if s.path.startswith("/data/"): s.send_header("Cache-Control","no-store")
         super().end_headers()
+    def html(s,t):
+        b=t.encode(); s.send_response(200); s.send_header("Content-Type","text/html; charset=utf-8"); s.send_header("Content-Length",str(len(b))); s.end_headers(); s.wfile.write(b)
+    def do_POST(s):
+        global KEY
+        if not SETKEY or s.path!="/setkey-"+SETKEY: s.send_response(404); s.end_headers(); return
+        n=int(s.headers.get("Content-Length",0)); k=urllib.parse.parse_qs(s.rfile.read(n).decode()).get("k",[""])[0].strip()
+        if k:
+            KEY=k
+            if KEYFILE: open(KEYFILE,"w").write(k)
+        try: ok=bool(qloo("/search",query="coffee",types="urn:entity:place",take=1))
+        except Exception as e: ok=False
+        s.html("<body style='font:20px sans-serif;padding:24px'>"+("Saved. Qloo OK" if ok else "Saved, but Qloo rejected the key"))
     def do_GET(s):
         u=urllib.parse.urlparse(s.path); q={k:v[0] for k,v in urllib.parse.parse_qs(u.query).items()}
+        if SETKEY and u.path=="/setkey-"+SETKEY: return s.html(FORM)
         try:
             if u.path=="/api/places": return s.jsend(places(q.get("q","")) if q.get("q","").strip() else [])
             if u.path=="/api/build":
