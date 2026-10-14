@@ -47,7 +47,7 @@ function showBack(k){
   const face=slEl.style.backgroundImage||`url('${t.art||t.photo||""}')`;
   const el=$("#back");
   el.innerHTML=`<i class="bk-scrim"></i><div class="bk-card" id="bkCard">
-    <div class="bk-front" style="background-image:${face}"></div>
+    <div class="bk-front"></div>
     <div class="bk-rear"><div class="bk-in">
       <div class="bk-h"><span>${cat}</span><span>Side ${k<plan.cues.length/2?"A":"B"} · ${pad(k+1)}</span><span>${hhmm(dayMin(c.start))}</span></div>
       <h3>${esc(cleanTitle(t))}</h3><p class="bk-a">${esc(t.artist)}</p>
@@ -58,6 +58,7 @@ function showBack(k){
       <div class="bk-code">${barcode(t)}<span>${bars} bars · red = every 8th</span></div>
       <div class="bk-f"><button id="bkPlay">▶ Play from here</button><button id="bkX">Turn back</button></div>
     </div></div></div>`;
+  el.querySelector(".bk-front").style.backgroundImage=face;
   const card=$("#bkCard"),S=Math.min(innerWidth*.9,460),Hh=Math.min(S*(innerWidth<760?1.6:1.18),innerHeight-(innerWidth<760?150:90)),L=(innerWidth-S)/2,T=Math.max(60,(innerHeight-Hh)/2);
   Object.assign(card.style,{left:L+"px",top:T+"px",width:S+"px",height:Hh+"px"});
   // one transform from the sleeve's spot on the wall to the centre: compositor-only, no layout or paint while it runs
