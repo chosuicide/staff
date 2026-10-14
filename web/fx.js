@@ -1,43 +1,49 @@
-/* STAFF fx: data-cut grooves, the shop's day of light, scratching, dust, neon. Hooks: fxLayout() after layout, fxFrame(T,c,st) per frame. */
+/* STAFF fx: photographed materials (sleeves, discs, the shop room), the hour's light, scratching. Hooks: fxLayout() after layout, fxFrame(T,c,st) per frame. */
 var SCR={on:false,rot:0,last:0};
 const DAY_DEFAULT={o:8*60,c:20*60};
 function dayWin(){return OPEN||DAY_DEFAULT}
 function dayMin(T){const d=dayWin();return d.o+(plan?clamp(T/plan.total,0,1):0)*(d.c-d.o)}
 
-/* ---------- A: grooves cut from BeatScope ---------- */
-const grooveCache=new Map();
-function grooveTex(t){
-  if(grooveCache.has(t.id))return grooveCache.get(t.id);
-  const S=640,cv=document.createElement("canvas");cv.width=cv.height=S;const g=cv.getContext("2d"),C=S/2;
-  g.fillStyle="#090706";g.beginPath();g.arc(C,C,C,0,7);g.fill();
-  const d=t.down,nb=d.length,r0=C*.975,r1=C*.375,env=t.env||[];
-  const loud=s=>{if(!env.length)return .5;const i=clamp(s|0,0,env.length-1);return env[i]};
-  const step=(r0-r1)/Math.max(1,nb);
-  for(let b=0;b<nb;b++){
-    const r=r0-b*step,tb=d[b],lv=loud(tb),phrase=b%8===0;
-    const l=10+lv*34+(phrase?10:0);
-    g.strokeStyle=`rgb(${l+3},${l},${l-3})`;g.lineWidth=Math.max(.6,step*.62);g.beginPath();g.arc(C,C,r,0,7);g.stroke();
-    // beat notches: the four beats of this bar, the downbeat in signal orange
-    const nx=d[b+1]||tb+(tb-(d[b-1]||tb-2)),len=nx-tb;
-    for(let q=0;q<4;q++){const a=q*Math.PI/2-Math.PI/2+(b*0.011);
-      g.fillStyle=q?`rgba(239,228,207,${.05+lv*.18})`:`rgba(255,90,31,${.25+lv*.6})`;
-      g.beginPath();g.arc(C+Math.cos(a)*r,C+Math.sin(a)*r,q?step*.38:step*.55,0,7);g.fill()}
-  }
-  // quiet passages leave a shiny gap like a real track gap
-  for(let b=1;b<nb-1;b++){if(loud(d[b])<.28&&loud(d[b-1])>=.28){const r=r0-b*step;g.strokeStyle="rgba(239,228,207,.12)";g.lineWidth=step*1.4;g.beginPath();g.arc(C,C,r,0,7);g.stroke()}}
-  g.strokeStyle="#000";g.lineWidth=3;g.beginPath();g.arc(C,C,r1-2,0,7);g.stroke();
-  const p=new Promise(res=>cv.toBlob(bl=>res(URL.createObjectURL(bl)),"image/png"));
-  grooveCache.set(t.id,p);return p;
+/* ---------- A: real materials. Every sleeve is the track's own cover printed on photographed paper;
+   every disc is a photographed LP with the cover as its label. Composited once per track, then only moved. ---------- */
+const loadI=u=>new Promise(r=>{if(!u)return r(null);const i=new Image();i.decoding="async";i.onload=()=>r(i);i.onerror=()=>r(null);i.src=u});
+const MAT={};
+const matReady=Promise.all(["img/vinyl.webp","img/label-paper.webp","img/sleeve-shade.jpg","img/sleeve-rub.webp"].map(loadI)).then(a=>{[MAT.vinyl,MAT.label,MAT.shade,MAT.rub]=a});
+const texCache=new Map();
+const LAB=.172,HOLE=.0085;
+function coverDraw(g,im,x,y,s){const k=Math.min(im.width,im.height),sx=(im.width-k)/2,sy=(im.height-k)/2;g.drawImage(im,sx,sy,k,k,x,y,s,s)}
+const blobURL=(c,type,q)=>new Promise(r=>c.toBlob(b=>r(b?URL.createObjectURL(b):c.toDataURL()),type,q));
+function texSize(){const d=Math.min(2,devicePixelRatio||1);return R*d>420?768:512}
+function sleeveTex(t){
+  const u=t.art||t.photo,N=texSize(),key="s|"+u+"|"+N;if(texCache.has(key))return texCache.get(key);
+  const p=Promise.all([matReady,loadI(u)]).then(([,im])=>{const c=document.createElement("canvas");c.width=c.height=N;const g=c.getContext("2d");
+    if(im)coverDraw(g,im,0,0,N);else{g.fillStyle="#3a3128";g.fillRect(0,0,N,N)}
+    if(MAT.shade){g.globalCompositeOperation="multiply";g.drawImage(MAT.shade,0,0,N,N)}
+    if(MAT.rub){g.globalCompositeOperation="screen";g.drawImage(MAT.rub,0,0,N,N)}
+    return blobURL(c,"image/jpeg",.86)});
+  texCache.set(key,p);return p;
+}
+function discTex(t){
+  const u=t.art||t.photo,N=texSize(),key="d|"+u+"|"+N;if(texCache.has(key))return texCache.get(key);
+  const p=Promise.all([matReady,loadI(u)]).then(([,im])=>{const c=document.createElement("canvas");c.width=c.height=N;const g=c.getContext("2d"),C=N/2,lr=LAB*N;
+    g.save();g.beginPath();g.arc(C,C,lr+1,0,7);g.clip();
+    if(im)coverDraw(g,im,C-lr,C-lr,lr*2);else{g.fillStyle="#c9b48f";g.fillRect(C-lr,C-lr,lr*2,lr*2)}
+    if(MAT.label){g.globalCompositeOperation="multiply";g.drawImage(MAT.label,C-lr,C-lr,lr*2,lr*2)}
+    g.restore();
+    if(MAT.vinyl)g.drawImage(MAT.vinyl,0,0,N,N);
+    g.globalCompositeOperation="destination-out";g.beginPath();g.arc(C,C,Math.max(2,HOLE*N),0,7);g.fill();
+    return blobURL(c,"image/webp",.9)});
+  texCache.set(key,p);return p;
 }
 function fxLayout(){
   if(!plan)return;
-  $$(".col").forEach((el,k)=>{const c=plan.cues[k];if(!c)return;const disc=el.querySelector(".disc");
-    grooveTex(c.t).then(u=>{disc.style.backgroundImage=`url('${u}')`;disc.classList.add("cut")});
-    if(!el.querySelector(".sheen")){const sh=document.createElement("div");sh.className="sheen";sh.innerHTML=`<svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="40"/></svg>`;el.appendChild(sh)}
+  $$(".col").forEach((el,k)=>{const c=plan.cues[k];if(!c)return;const disc=el.querySelector(".disc"),sl=el.querySelector(".sleeve");
+    discTex(c.t).then(u=>{disc.style.backgroundImage=`url('${u}')`;disc.classList.add("cut")});
+    sleeveTex(c.t).then(u=>{sl.style.backgroundImage=`url('${u}')`;sl.classList.add("mat")});
+    if(!el.querySelector(".sheen")){const sh=document.createElement("div");sh.className="sheen";el.appendChild(sh)}
     const sh=el.querySelector(".sheen");Object.assign(sh.style,{left:disc.style.left,top:disc.style.top,width:disc.style.width,height:disc.style.height})});
   dayLabels();
   if(fxLayout.lastShop!==shop.id){fxLayout.lastShop=shop.id;$$(".col").forEach((el,k)=>{el.classList.remove("drop");void el.offsetWidth;el.style.setProperty("--d",(k*.09)+"s");el.classList.add("drop")})}
-  neonText();
 }
 function dayLabels(){
   if(!plan)return;let hh="";
@@ -46,37 +52,34 @@ function dayLabels(){
   $$(".txt .idx span:first-of-type").forEach((el,k)=>{el.innerHTML=`<i class="clock-big">${hhmm(dayMin(plan.cues[k].start))}</i>`});
 }
 
-/* ---------- B: the shop's day of light ---------- */
-// key colours by hour: [hour, window light rgb, beam angle deg, intensity]
-const SKY=[[5,[255,170,110],-38,.5],[8,[255,196,128],-30,.95],[12,[236,240,255],-6,.8],[15,[255,206,140],14,.85],[18,[255,128,70],30,.75],[20,[255,70,140],36,.35],[23,[90,110,255],40,.25],[29,[255,170,110],-38,.5]];
+/* ---------- B: the shop itself behind the wall, graded for the hour ---------- */
+let roomSide=0,roomKey=null;
+function setRoom(u,id){
+  if(!u){$$(".r-img").forEach(e=>e.classList.remove("on"));roomKey=null;return}
+  if(roomKey===u)return;roomKey=u;
+  loadI(u).then(im=>{if(!im||roomKey!==u)return;
+    const Wc=Math.min(1280,Math.max(720,im.width*2)),Hc=Math.round(Wc*im.height/im.width),c=document.createElement("canvas");c.width=Wc;c.height=Hc;const g=c.getContext("2d");
+    g.imageSmoothingQuality="high";g.drawImage(im,0,0,Wc,Hc);
+    // grade: warm low light, crushed but not black, like sitting at the back of the room
+    g.globalCompositeOperation="multiply";g.fillStyle="rgb(178,150,120)";g.fillRect(0,0,Wc,Hc);
+    g.globalCompositeOperation="source-over";g.fillStyle="rgba(14,11,8,.5)";g.fillRect(0,0,Wc,Hc);
+    const v=g.createRadialGradient(Wc/2,Hc*.42,Math.min(Wc,Hc)*.2,Wc/2,Hc*.5,Math.max(Wc,Hc)*.75);v.addColorStop(0,"rgba(0,0,0,0)");v.addColorStop(1,"rgba(6,4,3,.7)");g.fillStyle=v;g.fillRect(0,0,Wc,Hc);
+    blobURL(c,"image/jpeg",.84).then(url=>{if(roomKey!==u)return;roomSide^=1;const on=$(roomSide?"#rImgB":"#rImgA"),off=$(roomSide?"#rImgA":"#rImgB");
+      const pre=new Image();pre.onload=()=>{on.style.backgroundImage=`url('${url}')`;requestAnimationFrame(()=>{on.classList.add("on");off.classList.remove("on")})};pre.src=url})});
+}
+// key colours by hour: [hour, light rgb, angle deg, intensity]. Only a faint wash over the photo.
+const SKY=[[5,[255,170,110],-38,.5],[8,[255,196,128],-30,.9],[12,[236,240,255],-6,.7],[15,[255,206,140],14,.85],[18,[255,128,70],30,.8],[20,[255,90,120],36,.45],[23,[90,110,255],40,.35],[29,[255,170,110],-38,.5]];
 function skyAt(min){let h=min/60;while(h<5)h+=24;while(h>=29)h-=24;let i=0;while(i<SKY.length-2&&SKY[i+1][0]<=h)i++;
   const a=SKY[i],b=SKY[i+1],f=(h-a[0])/(b[0]-a[0]),m=(x,y)=>x+(y-x)*f;
   return {rgb:a[1].map((v,j)=>Math.round(m(v,b[1][j]))),ang:m(a[2],b[2]),k:m(a[3],b[3]),night:h>=19.5||h<6}}
-let lastSky=-1e9,motes=null,neonOn=false;
 function applySky(min){
   const s=skyAt(min);if(Math.abs(min-(applySky.m??-999))<12)return s;applySky.m=min;
-  const [r,g,b]=s.rgb,w=$("#win");
-  w.style.background=`repeating-linear-gradient(90deg,rgba(${r},${g},${b},${(.22*s.k).toFixed(3)}) 0 21%,transparent 21% 25%)`;
-  w.style.transform=`translateX(${(-50+s.ang*.9).toFixed(1)}%) skewX(${(-s.ang).toFixed(1)}deg)`;
-  $("#lamp").style.filter=`hue-rotate(0deg)`;
-  $("#tint").style.background=`radial-gradient(120% 90% at ${50-s.ang}% 0%,rgba(${r},${g},${b},${(.10*s.k).toFixed(3)}),transparent 70%)`;
-  const sx=(-s.ang/40*26).toFixed(1);$("#cols").style.setProperty("--shx",sx+"px");
-  const n=s.night;if(n!==neonOn){neonOn=n;$("#neon").classList.toggle("lit",n)}
+  const [r,g,b]=s.rgb;
+  $("#tint").style.background=`radial-gradient(110% 80% at ${50-s.ang}% -10%,rgba(${r},${g},${b},${(.13*s.k).toFixed(3)}),transparent 70%)`;
+  const sx=(-s.ang/40*18).toFixed(1);$("#cols").style.setProperty("--shx",sx+"px");
   $("#dayChip").innerHTML=`<i style="background:rgb(${r},${g},${b})"></i>${hhmm(min)}`;
   return s;
 }
-function neonText(){$("#neon").textContent=(shop.name||"").replace(/^(the\s+)/i,"").replace(/\s*[-–].*$/,"").replace(/\s+coffee\b/i,"").toLowerCase()}
-
-/* ---------- dust in the beam ---------- */
-function dust(){
-  dust.n=(dust.n||0)+1;if(dust.n%(small?3:2))return;const cv=$("#dust"),g=cv.getContext("2d"),dpr=1;
-  if(cv.width!==innerWidth*dpr){cv.width=innerWidth*dpr;cv.height=innerHeight*dpr}
-  if(!motes)motes=Array.from({length:small?18:36},()=>({x:Math.random(),y:Math.random(),z:Math.random(),v:Math.random()*2-1}));
-  g.clearRect(0,0,cv.width,cv.height);const s=skyAt(dayMin(now())),[r,gg,b]=s.rgb,L=clamp(lvS,0,1);
-  for(const m of motes){m.y-=.00024*(1+m.z);m.x+=Math.sin((m.y+m.v)*9)*.0005-SCROLLV*.00004*(1+m.z);if(m.y<-.02){m.y=1.02;m.x=Math.random()}if(m.x<-.05)m.x=1.05;if(m.x>1.05)m.x=-.05;
-    const a=(.12+.5*m.z)*(.55+L*.6)*s.k;g.fillStyle=`rgba(${r},${gg},${b},${a.toFixed(3)})`;g.beginPath();g.arc(m.x*cv.width,m.y*cv.height,(.6+m.z*1.8)*dpr,0,7);g.fill()}
-}
-let SCROLLV=0,lastCur=0;
 
 /* ---------- per frame ---------- */
 function armAngle(rFrac){ // rotate tonearm so the stylus sits at rFrac*R from the centre
@@ -84,13 +87,11 @@ function armAngle(rFrac){ // rotate tonearm so the stylus sits at rFrac*R from t
   const dist=th=>{const a=th*Math.PI/180,x=T0[0]*Math.cos(a)-T0[1]*Math.sin(a),y=T0[0]*Math.sin(a)+T0[1]*Math.cos(a);return Math.hypot(P[0]+x,P[1]+y)};
   for(let i=0;i<22;i++){const m=(lo+hi)/2;if(dist(m)>rFrac)lo=m;else hi=m}return (lo+hi)/2}
 function fxFrame(T,c,st){
-  SCROLLV=cur-lastCur;lastCur=cur;
-  applySky(dayMin(T));dust();
+  applySky(dayMin(T));
   const el=(frame.cols||[])[c.k];if(!el)return;
   const d=c.t.down;let b=0;while(b<d.length-1&&d[b+1]<=st)b++;
   const pr=d.length>1?b/(d.length-1):0, rFrac=.488-pr*(.488-.19);
-  const arm=el.querySelector(".arm");if(arm)arm.style.rotate=armAngle(rFrac).toFixed(2)+"deg";
-  const trk=el.querySelector(".sheen .trk");if(trk){trk.setAttribute("r",(rFrac*100).toFixed(2));}
+  const arm=el.querySelector(".arm");if(arm){const a=armAngle(rFrac).toFixed(1);if(arm._a!==a){arm._a=a;arm.style.rotate=a+"deg"}}
 }
 
 /* ---------- C: scratch the playing record ---------- */

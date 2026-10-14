@@ -3,11 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#16120e">
+<meta name="theme-color" content="#120f0c">
 <title>STAFF — the shop's day, on the wall</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=Noto+Sans+JP:wght@300;700;900&family=Noto+Sans+KR:wght@300;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;700;900&family=Noto+Sans+KR:wght@300;700;900&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/newsreader.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/schibsted.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="img/vinyl.webp" as="image">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,14 +22,12 @@
 </div>
 
 <header class="top">
-  <div class="logo">STAFF<span>/ record wall</span></div>
+  <div class="logo">STAFF<span>record wall</span></div>
   <nav id="shops" class="shops"></nav>
   <div class="top-r"><button id="anyBtn" class="any">+ Any shop</button><button id="crateBtn">Crate</button><button id="curveBtn">Curve</button><button id="posterBtn">Poster</button></div>
 </header>
 
-<div id="room" class="room"><div class="r-img" id="rImg"></div><div id="tint" class="tint"></div><div id="win" class="win"></div><div class="r-name" id="rName"></div><div id="neon" class="neon"></div></div>
-<div id="lamp" class="lamp"></div>
-<canvas id="dust" class="dust"></canvas>
+<div id="room" class="room"><div class="r-img" id="rImgA"></div><div class="r-img" id="rImgB"></div><div id="tint" class="tint"></div><div class="r-name" id="rName"></div></div>
 <div id="dayChip" class="day-chip"></div>
 <main id="wall">
   <div id="world">

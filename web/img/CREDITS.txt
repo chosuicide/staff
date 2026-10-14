@@ -1,0 +1,26 @@
+STAFF: photographic materials. Every file here is derived from a free-licensed real photograph.
+Processing scripts: tools/materials/ (disc.py, sleeve.py).
+
+vinyl.webp, vinyl-sheen.webp, label-paper.webp
+  Source: "12in-Vinyl-LP-Record-Angle.jpg" by Evan-Amos, Public domain
+  https://commons.wikimedia.org/wiki/File:12in-Vinyl-LP-Record-Angle.jpg
+  Disc split into a rotation-invariant body (radial profile + fine scuffs, rotates) and its
+  reflections (static sheen); label-paper is the luminance of the photo's real paper label.
+
+sleeve-shade.jpg, sleeve-rub.webp, paper.jpg
+  Source 1: "Old Paper texture.jpg" by Arka09185, Public domain
+  https://commons.wikimedia.org/wiki/File:Old_Paper_texture.jpg
+  (paper fibre, staining, edge burn; the ring-wear and edge rub are this photo's own fibre,
+  masked to where a record's edge and handling wear a sleeve)
+  Source 2 (crease relief only): "Free crumpled paper texture for layers (2978651767).jpg"
+  by Pink Sherbet Photography (Flickr), CC BY 2.0
+  https://commons.wikimedia.org/wiki/File:Free_crumpled_paper_texture_for_layers_(2978651767).jpg
+
+deck-metal.jpg
+  Source: "Brushed metal.jpg" by Gordeonbleu, Public domain
+  https://commons.wikimedia.org/wiki/File:Brushed_metal.jpg
+
+Shop backgrounds come from each place's own Qloo image (web/art/place_<slug>.jpg, not committed).
+
+Fonts (web/fonts/): Newsreader (Production Type) and Schibsted Grotesk (Schibsted Media Group),
+both SIL Open Font License 1.1, via Google Fonts.

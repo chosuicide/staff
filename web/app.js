@@ -81,14 +81,14 @@ function layout(){
   G=[];let html="",ticks="";
   plan.cues.forEach((c,k)=>{
     const lvl=(c.t.energy-lo)/(hi-lo||1), cy=zoneB-R/2-lvl*(zoneB-zoneT-R), x=colX(k), sx=x+(small?0:colW*.04);
-    const pic=c.t.photo||c.t.art, lbl=c.t.art||c.t.photo, title=cleanTitle(c.t);
+    const pic=c.t.art||c.t.photo, title=cleanTitle(c.t);
     const fs=Math.round(clamp(colW*.13,34,72)*(title.length>16?.72:1)*(title.length>28?.8:1));
     G.push({x,sx,cy,mid:x+colW/2});
     html+=`<div class="col" data-k="${k}" style="left:0;width:0">
       ${k?`<div class="join" style="left:${x}px;top:${rulerY-26}px;height:${H-rulerY}px"><span>joins on bar ${plan.cues[k-1].iOut+1} · ${OV_BARS}-bar blend${Math.abs(c.rate-1)>.004?` · ${(c.rate>1?"+":"")}${((c.rate-1)*100).toFixed(1)}%`:""}</span></div>`:""}
-      <div class="disc" style="left:${sx}px;top:${cy-R/2}px;width:${R}px;height:${R}px"><div class="lbl" style="background-image:url('${lbl||""}')"></div></div>
+      <div class="disc" style="left:${sx}px;top:${cy-R/2}px;width:${R}px;height:${R}px"></div>
       <div class="sleeve" style="left:${sx}px;top:${cy-R/2}px;width:${R}px;height:${R}px;background-image:url('${pic||""}')"></div>
-      <svg class="arm" viewBox="0 0 60 110" style="left:${sx+R*1.5-R*.22}px;top:${cy-R*.62}px;width:${R*.32}px;height:${R*.6}px"><circle cx="54" cy="8" r="6" fill="#efe4cf"/><path d="M54 8 L50 70 L30 100" stroke="#efe4cf" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="22" y="96" width="14" height="9" rx="2" fill="#ff5a1f" transform="rotate(-30 29 100)"/></svg>
+      <svg class="arm" viewBox="0 0 60 110" style="left:${sx+R*1.5-R*.22}px;top:${cy-R*.62}px;width:${R*.32}px;height:${R*.6}px"><circle cx="54" cy="8" r="6.5" fill="#2a2622" stroke="#8d877e" stroke-width="1.2"/><circle cx="54" cy="8" r="2" fill="#b9b2a6"/><path d="M54 8 L50 70 L30 100" stroke="#0d0b09" stroke-opacity=".55" stroke-width="4.2" fill="none" stroke-linecap="round" transform="translate(1.5 2)"/><path d="M54 8 L50 70 L30 100" stroke="#c9c2b6" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M54 8 L50 70 L30 100" stroke="#fff" stroke-opacity=".5" stroke-width=".7" fill="none" stroke-linecap="round" transform="translate(-.6 0)"/><rect x="22" y="95" width="15" height="10" rx="1.5" fill="#1d1a17" stroke="#8d877e" stroke-width=".8" transform="rotate(-30 29 100)"/></svg>
       <div class="txt" style="left:${x+12}px;width:${colW-36}px;top:${rulerY+34}px">
         <div class="idx"><b>${pad(k+1)}</b><span>${fmt(c.start)}</span><span>Qloo #${rankOf(c.t)} for this shop</span></div>
         <h2 style="font-size:${fs}px">${esc(title)}</h2>
@@ -103,7 +103,7 @@ function layout(){
   // the day's energy as a string pinned through every record
   let p="";G.forEach((g,i)=>{const X=g.sx+R/2,Y=g.cy;if(!i)p=`M${X},${Y}`;else{const q=G[i-1],qx=q.sx+R/2,mx=(qx+X)/2;p+=` C${mx},${q.cy} ${mx},${Y} ${X},${Y}`}});
   const sv=$("#string");sv.setAttribute("width",$("#world").style.width);
-  sv.innerHTML=`<path d="${p}" fill="none" stroke="rgba(239,228,207,.22)" stroke-width="1" stroke-dasharray="2 5"/>`;
+  sv.innerHTML=`<path d="${p}" fill="none" stroke="rgba(233,223,204,.16)" stroke-width="1"/>`;
   decorate();if(typeof fxLayout==="function")fxLayout();
   $("#ph i").style.top=(zoneT-20)+"px";$("#ph i").style.height=(rulerY-zoneT+26)+"px";
   target=clamp(target,0,maxCur());cur=clamp(cur,0,maxCur());
@@ -114,7 +114,7 @@ function openAt(){const h=shop&&shop.hours;if(!h)return null;const day=["sunday"
   const d=(h[day]||[])[0];if(!d||d.closed)return null;const p=s=>{const m=/T?(\d\d):(\d\d)/.exec(s||"");return m?(+m[1])*60+(+m[2]):null};let o=p(d.opens),c=p(d.closes);if(o==null)return null;if(c!=null&&c<=o)c+=1440;return {o,c}}
 const hhmm=m=>pad(((m/60)|0)%24)+":"+pad((m|0)%60);
 function decorate(){
-  const r=$("#rImg");if(shop.image){const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=48;c.height=Math.round(48*im.height/im.width)||32;const g=c.getContext("2d");g.filter="blur(2px) saturate(1.3) brightness(.3)";g.drawImage(im,0,0,c.width,c.height);r.style.backgroundImage=`url('${c.toDataURL()}')`;r.classList.add("on")};im.src=shop.image}else r.classList.remove("on");
+  if(typeof setRoom==="function")setRoom(shop.image,shop.id);
   $("#rName").textContent=(shop.name||"").replace(/\s*[-–].*$/,"");
   const tags=(shop.tags||[]).filter((t,i,a)=>!NOTAG.test(t)&&a.findIndex(x=>x.toLowerCase()===t.toLowerCase())===i).slice(0,10);
   const n=plan.cues.length;let th="";
@@ -125,19 +125,28 @@ function decorate(){
   const oa=openAt();OPEN=oa;let hh="";
   if(oa){plan.cues.forEach((c,k)=>{const m=oa.o+c.start/60;hh+=`<b class="h" style="left:${G[k].x}px">${hhmm(m)}</b>`})}
   $("#hours").innerHTML=hh;$("#hours").style.top=(rulerY+16)+"px";
-  const bd=$("#band");bd.style.top=(rulerY-120)+"px";bd.width=Math.min(1024,W);bd.height=120;bd._gr=null;bd.style.width=W+"px";bd.style.height="120px";
+  const bd=$("#band"),BH=small?64:84;bd.style.top=(rulerY-BH-4)+"px";bd.width=Math.min(1024,W);bd.height=BH;bd._gr=null;bd.style.width=W+"px";bd.style.height=BH+"px";
   $$(".txt .idx span:first-of-type").forEach((el,k)=>{if(oa)el.innerHTML=`<i class="clock-big">${hhmm(oa.o+plan.cues[k].start/60)}</i>`});
 }
 let OPEN=null,fbuf=null,lvS=0,lvMax=.05;
 function audioFrame(){
-  let lv=0;const bd=$("#band"),g=bd.getContext("2d");audioFrame.n=(audioFrame.n||0)+1;const drawBand=audioFrame.n%2===0;if(drawBand)g.clearRect(0,0,bd.width,bd.height);
+  let lv=0;const bd=$("#band"),g=bd.getContext("2d");audioFrame.n=(audioFrame.n||0)+1;const drawBand=audioFrame.n%2===0;
   if(analyser&&playing&&!muted){if(!fbuf)fbuf=new Uint8Array(analyser.frequencyBinCount);analyser.getByteFrequencyData(fbuf);
     let s=0;for(let i=1;i<10;i++)s+=fbuf[i];lv=s/(9*255);
-    if(drawBand){if(!bd._gr){bd._gr=g.createLinearGradient(0,bd.height,0,0);bd._gr.addColorStop(0,"rgba(255,90,31,.55)");bd._gr.addColorStop(1,"rgba(255,190,120,0)")}g.fillStyle=bd._gr;
-    const N=small?40:64,w=bd.width/N;for(let i=0;i<N;i++){const bin=Math.floor(Math.pow(i/N,1.8)*300)+2,v=fbuf[bin]/255,h=Math.pow(v,1.6)*bd.height*.95;g.fillRect(i*w+w*.18,bd.height-h,w*.64,h)}}}
-  lvMax=lvMax<.06?lv:lvMax+(lv-lvMax)*.03;const ln=lv?clamp((lv-lvMax*.97)/(lvMax*.25+.01),0,1):0;window._lv=[lv,lvMax];lvS+=(ln-lvS)*(ln>lvS?.5:.12);const L=clamp(lvS,0,1);$("#lamp").style.opacity=(.45+.55*L).toFixed(3);const gw=$("#glow");if(gw)gw.style.opacity=(.15+.85*L).toFixed(3);
-  bd.style.transform=`translateX(${cur.toFixed(1)}px)`;
-  $("#rName").style.transform=`translateX(${(-cur*.12).toFixed(1)}px)`;
+    if(drawBand)ledMeter(g,bd.width,bd.height,fbuf)}
+  else if(drawBand&&audioFrame.lit!==0){audioFrame.lit=0;ledMeter(g,bd.width,bd.height,null)}
+  lvMax=lvMax<.06?lv:lvMax+(lv-lvMax)*.03;const ln=lv?clamp((lv-lvMax*.97)/(lvMax*.25+.01),0,1):0;window._lv=[lv,lvMax];lvS+=(ln-lvS)*(ln>lvS?.5:.12);const L=clamp(lvS,0,1);const gw=$("#glow");if(gw)gw.style.opacity=(.25+.75*L).toFixed(3);
+  bd.style.transform=`translate3d(${cur.toFixed(1)}px,0,0)`;
+}
+/* LED level meter: amber segments lit from behind, unlit ones still visible like a real VU strip */
+function ledMeter(g,w,h,f){
+  audioFrame.lit=f?1:0;g.clearRect(0,0,w,h);const N=small?28:48,cw=w/N,rows=small?9:12,sh=h/rows;
+  for(let i=0;i<N;i++){let v=0;if(f){const bin=Math.floor(Math.pow(i/N,1.8)*300)+2;v=Math.pow(f[bin]/255,1.5)}
+    const lit=Math.round(v*rows),x=i*cw+cw*.2,bw=cw*.6;
+    for(let r=0;r<rows;r++){const y=h-(r+1)*sh+sh*.22,on=r<lit,hot=r>=rows-2;
+      if(on){g.fillStyle=hot?"rgba(255,110,60,.22)":"rgba(255,170,70,.16)";g.fillRect(x-cw*.16,y-sh*.2,bw+cw*.32,sh*.96);
+        g.fillStyle=hot?"#ff7a45":"#ffb85a";g.fillRect(x,y,bw,sh*.56)}
+      else{g.fillStyle="rgba(233,223,204,.035)";g.fillRect(x,y,bw,sh*.56)}}}
 }
 const maxCur=()=>plan?(plan.cues.length-1)*colW:0;
 function rankOf(t){const l=shop.artists||artistsOf(shop);return l.findIndex(a=>a.name===t.artist)+1}
@@ -145,7 +154,7 @@ function rankOf(t){const l=shop.artists||artistsOf(shop);return l.findIndex(a=>a
 /* ================= per-frame: scroll-driven motion ================= */
 let lastK=-1;
 function frame(){
-  requestAnimationFrame(frame); if(!plan)return;
+  requestAnimationFrame(frame); if(!plan)return; if(window.__backOpen){audioFrame();return}
   const T=now();
   if(follow){const cc=cueAt(T);const f=cc.k&&T<cc.start+cc.ov?(T-cc.start)/cc.ov:1;const ease=f<.5?2*f*f:1-Math.pow(-2*f+2,2)/2;target=clamp((cc.k-1+ease)*colW,0,maxCur())}
   {const dg=$("#wall").classList.contains("drag");if(dg||follow){cur+=(target-cur)*(dg?.38:.1);SPV=0}else{SPV+=(target-cur)*.05;SPV*=.7;cur+=SPV}
@@ -159,7 +168,7 @@ function frame(){
     const disc=el.children[k?1:0], sl=disc.nextElementSibling, txt=el.querySelector(".txt");
     disc.style.transform=`translateX(${(R*.5*e).toFixed(1)}px) rotate(${spin.toFixed(1)}deg)`;{const shn=el.lastElementChild;if(shn&&shn.classList.contains('sheen'))shn.style.transform=`translateX(${(R*.5*e).toFixed(1)}px)`}
     sl.style.transform=`perspective(900px) rotateY(${(TX*e*14+rel*-10).toFixed(2)}deg) rotateX(${(-TY*e*10).toFixed(2)}deg) scale(${(.9+.1*e).toFixed(3)}) rotate(${(rel*-4).toFixed(2)}deg)`;
-    if(e>.05){sl.style.setProperty("--gx",(50+TX*45-rel*60).toFixed(1)+"%");sl.style.setProperty("--gy",(30+TY*40).toFixed(1)+"%")}sl.style.opacity=(.35+.65*e).toFixed(3);
+    
     txt.style.opacity=(.15+.85*e).toFixed(3);txt.style.transform=`translateY(${((1-e)*24).toFixed(1)}px)`;
     if(isNow!==el.classList.contains("now"))el.classList.toggle("now",isNow)});
   if(!(window.__holdPh&&__holdPh()))$("#ph").style.left=xOf(T).toFixed(1)+"px";
@@ -231,11 +240,11 @@ function renderDials(){
     drawDial(d,i)});drawCurve();
 }
 function drawDial(d,i){const v=curve[i],a=-135+270*v,rad=x=>(x-90)*Math.PI/180;let s="";
-  for(let k=0;k<=24;k++){const t=-135+11.25*k;s+=`<circle cx="${50+44*Math.cos(rad(t))}" cy="${50+44*Math.sin(rad(t))}" r="${k%6?1.2:2}" fill="${t<=a+.1?"#ff5a1f":"rgba(239,228,207,.25)"}"/>`}
-  d.querySelector("svg").innerHTML=`${s}<circle cx="50" cy="50" r="34" fill="url(#gr${i})"/><defs><radialGradient id="gr${i}"><stop offset="0" stop-color="#1b1612"/><stop offset="1" stop-color="#0b0907"/></radialGradient></defs><circle cx="50" cy="50" r="34" fill="none" stroke="rgba(239,228,207,.15)"/><line x1="${50+12*Math.cos(rad(a))}" y1="${50+12*Math.sin(rad(a))}" x2="${50+30*Math.cos(rad(a))}" y2="${50+30*Math.sin(rad(a))}" stroke="#efe4cf" stroke-width="3" stroke-linecap="round"/>`}
+  for(let k=0;k<=24;k++){const t=-135+11.25*k;s+=`<circle cx="${50+44*Math.cos(rad(t))}" cy="${50+44*Math.sin(rad(t))}" r="${k%6?1.2:2}" fill="${t<=a+.1?"#b8361c":"rgba(29,25,20,.25)"}"/>`}
+  d.querySelector("svg").innerHTML=`${s}<circle cx="50" cy="50" r="34" fill="url(#gr${i})"/><defs><radialGradient id="gr${i}"><stop offset="0" stop-color="#3a342d"/><stop offset="1" stop-color="#121010"/></radialGradient></defs><circle cx="50" cy="50" r="34" fill="none" stroke="rgba(0,0,0,.6)"/><line x1="${50+12*Math.cos(rad(a))}" y1="${50+12*Math.sin(rad(a))}" x2="${50+30*Math.cos(rad(a))}" y2="${50+30*Math.sin(rad(a))}" stroke="#e9dfcc" stroke-width="3" stroke-linecap="round"/>`}
 function drawCurve(){const pts=curve.map((v,i)=>[i/3*400,74-v*68]);let d=`M${pts[0]}`;
   for(let i=1;i<4;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i],cx=(x0+x1)/2;d+=` C${cx},${y0} ${cx},${y1} ${x1},${y1}`}
-  $("#curveSvg").innerHTML=`<path d="${d}" fill="none" stroke="#ff5a1f" stroke-width="2" vector-effect="non-scaling-stroke"/>`}
+  $("#curveSvg").innerHTML=`<path d="${d}" fill="none" stroke="#b8361c" stroke-width="2" vector-effect="non-scaling-stroke"/>`}
 
 async function pick(id,autoplay){
   stop();pos=0;shop=await (await fetch(`data/${id}.json`)).json();excluded=new Set();
