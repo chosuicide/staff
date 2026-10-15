@@ -2,7 +2,7 @@
 
 **Qloo picks who. BeatScope picks when.**
 
-**Live demo:** https://flowers-pee-frequencies-showtimes.trycloudflare.com/ (mirror: https://54-250-96-53.sslip.io/)
+**Live demo:** https://transmission-shaw-tall-michel.trycloudflare.com/ (mirror: https://35-77-104-107.sslip.io/)
 
 STAFF turns any café, bar or shop into a full-day, beat-matched soundtrack built from the taste of *that specific room's* crowd.
 
