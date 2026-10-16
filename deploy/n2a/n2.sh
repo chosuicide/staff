@@ -9,4 +9,8 @@ fi
 docker rm -f n2a n2cf
 docker run -d --restart unless-stopped --name n2a -m 400m -p 127.0.0.1:18800:8000 --env-file /opt/n2a/env -v n2adata:/app/data n2a
 docker run -d --restart unless-stopped --name n2cf --network host cloudflare/cloudflared:latest tunnel --no-autoupdate --url http://localhost:18800
-while true; do U=$(docker logs n2cf 2>&1 | grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' | tail -1); [ -n "$U" ] && echo "$U" > /opt/pub/n2.txt; sleep 30; done
+L=
+while true; do U=$(docker logs n2cf 2>&1 | grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' | tail -1); [ -n "$U" ] && echo "$U" > /opt/pub/n2.txt
+ M="n2=$U staff=$(cat /opt/pub/*staff* /opt/pub/cf.txt 2>/dev/null | tr '\n' ' ') lg=$(cat /opt/pub/lg.txt 2>/dev/null) n2a=$(docker inspect -f '{{.State.Status}}' n2a 2>&1) ls=$(ls /opt/pub | tr '\n' ,)"
+ [ "$M" != "$L" ] && curl -s -m 10 -d "$M" https://ntfy.sh/n2a-91e04a8a1ac46f47 >/dev/null && L="$M"
+ sleep 30; done
