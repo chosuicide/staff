@@ -37,7 +37,7 @@ NOTION_IMPERSONATE = os.getenv("NOTION_IMPERSONATE", "chrome").strip()
 # listenToThreadTranscript) or "legacy" (runInferenceTranscript). Accounts enrolled in the
 # agent_service experiment still accept legacy calls as of 2026-10-17, but the web UI uses agent_service.
 NOTION_RUNTIME = os.getenv("NOTION_RUNTIME", "agent_service").strip().lower()
-AGENT_SERVICE_TIMEOUT_S = float(os.getenv("AGENT_SERVICE_TIMEOUT_S", "240"))
+AGENT_SERVICE_TIMEOUT_S = float(os.getenv("AGENT_SERVICE_TIMEOUT_S", "900"))
 AGENT_SERVICE_DELETE_THREAD = os.getenv("AGENT_SERVICE_DELETE_THREAD", "false").strip().lower() in ("1", "true", "yes")
 
 BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
