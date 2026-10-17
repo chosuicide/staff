@@ -84,6 +84,23 @@ class _PumpedStream:
             return None
 
 
+def _keepalive_wrap(gen: Iterable[Any]) -> Generator[Any, None, None]:
+    """Emit an SSE comment whenever the wrapped generator is silent for a while
+    (covers thinking/search phases that lite mode drops)."""
+    for x in _PumpedStream(gen):
+        if isinstance(x, dict) and x.get("type") == "keepalive":
+            yield _KEEPALIVE_SSE
+        else:
+            yield x
+
+
+class _KAStreamingResponse(StreamingResponse):
+    def __init__(self, content: Any, *args: Any, **kwargs: Any):
+        if hasattr(content, "__next__") and not hasattr(content, "__anext__"):
+            content = _keepalive_wrap(content)
+        super().__init__(content, *args, **kwargs)
+
+
 async def _pump_first(stream_gen: Iterable[Any]) -> tuple["_PumpedStream", Any]:
     pumped = _PumpedStream(stream_gen)
     first = await asyncio.to_thread(pumped.first)
@@ -1031,7 +1048,7 @@ async def _handle_lite_request(
                     "Connection": "keep-alive",
                     "X-Accel-Buffering": "no",
                 }
-                return StreamingResponse(
+                return _KAStreamingResponse(
                     _create_lite_stream_generator(
                         response_id,
                         req_body.model,
@@ -1222,7 +1239,7 @@ async def _handle_standard_request(
                     "X-Accel-Buffering": "no",
                 }
                 client_type = request.headers.get("X-Client-Type", "").lower()
-                return StreamingResponse(
+                return _KAStreamingResponse(
                     _create_standard_stream_generator(
                         response_id,
                         req_body.model,
@@ -1870,7 +1887,7 @@ async def create_chat_completion(
                     "X-Conversation-Id": conversation_id,
                     **memory_headers,
                 }
-                return StreamingResponse(
+                return _KAStreamingResponse(
                     openai_stream_generator(),
                     media_type="text/event-stream",
                     headers=stream_headers,
